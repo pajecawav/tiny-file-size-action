@@ -1,0 +1,25 @@
+name: "tiny-file-size-action"
+branding:
+    icon: "activity"
+    color: "green"
+inputs:
+    github_token:
+        required: true
+        description: "github access token"
+    globs:
+        required: true
+        type: string
+        description: "list of globs or files to pass to tiny-file-size"
+    gzip:
+        required: false
+        type: boolean
+        default: true
+        description: "include gzip size in output"
+    brotli:
+        required: false
+        type: boolean
+        default: false
+        description: "include brotli size in output"
+runs:
+    using: "node16"
+    main: "dist/index.js"
