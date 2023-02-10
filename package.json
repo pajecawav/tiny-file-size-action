@@ -1,6 +1,6 @@
 {
 	"name": "tiny-file-size-action",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"license": "MIT",
 	"scripts": {
 		"build": "esbuild src/index.ts --bundle --platform=node --keep-names --outfile=dist/index.js",
