@@ -78,29 +78,45 @@ async function buildProject() {
 
 function buildTable(
 	sizes: FileSize[],
+	prevSizes: FileSize[],
 	{ gzip, brotli }: { gzip: boolean; brotli: boolean }
 ): string {
 	const rows: string[][] = [
 		["File", "Size", gzip && "Gzip", brotli && "Brotli"].filter(isString),
 	];
 
-	for (const size of sizes) {
-		const row: string[] = [];
+	function formatChange(value: number, prevValue: number | null): string {
+		const diff = value - (prevValue ?? 0);
 
-		row.push(size.file, humanizeBytes(size.raw));
+		if (diff === 0) {
+			return humanizeBytes(value);
+		}
+
+		const sign = diff < 0 ? "-" : "+";
+		const label = diff < 0 ? "✅" : "⚠️";
+
+		return `${humanizeBytes(value)} (${sign}${humanizeBytes(Math.abs(diff))}) ${label}`;
+	}
+
+	for (const size of sizes) {
+		const row: string[] = [size.file];
+
+		const prev = prevSizes.find(p => p.file === size.file);
+
+		row.push(formatChange(size.raw, prev?.raw ?? null));
 
 		if (gzip) {
-			row.push(size.gzip !== null ? humanizeBytes(size.gzip) : "");
+			row.push(size.gzip !== null ? formatChange(size.gzip, prev?.gzip ?? null) : "");
 		}
 
 		if (brotli) {
-			row.push(size.brotli !== null ? humanizeBytes(size.brotli) : "");
+			row.push(size.brotli !== null ? formatChange(size.brotli, prev?.brotli ?? null) : "");
 		}
 
 		rows.push(row);
 	}
 
-	return markdownTable(rows, { align: ["l", "r", "r", "r"] });
+	return markdownTable(rows);
 }
 
 async function main() {
@@ -114,7 +130,8 @@ async function main() {
 	logger.info("Building current branch");
 	await buildProject();
 	logger.info("Collecting file sizes for current branch");
-	const sizes = await getFileSizes({ files: getFilesFromGlobs(globs), gzip, brotli });
+	const currentFiles = getFilesFromGlobs(globs);
+	const sizes = await getFileSizes({ files: currentFiles, gzip, brotli });
 	logger.info(JSON.stringify(sizes, undefined, 4));
 
 	try {
@@ -132,12 +149,15 @@ async function main() {
 	const prevSizes = await getFileSizes({ files: getFilesFromGlobs(globs), gzip, brotli });
 	logger.info(JSON.stringify(prevSizes, undefined, 4));
 
+	const currentFilesSet = new Set(currentFiles);
+	const missingSizes = prevSizes.filter(size => !currentFilesSet.has(size.file));
+
 	const body = [
 		COMMENT_HEADER,
-		"Current sizes:",
-		buildTable(sizes, { gzip, brotli }),
-		"Previous sizes:",
-		buildTable(prevSizes, { gzip, brotli }),
+		"### Changes:",
+		buildTable(sizes, prevSizes, { gzip, brotli }),
+		"### Missing files:",
+		buildTable(missingSizes, missingSizes, { gzip, brotli }),
 	].join("\n\n");
 
 	logger.info(

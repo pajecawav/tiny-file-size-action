@@ -11911,22 +11911,33 @@ async function buildProject() {
   await (0, import_exec.exec)(`${pkgManager} run build`);
 }
 __name(buildProject, "buildProject");
-function buildTable(sizes, { gzip, brotli }) {
+function buildTable(sizes, prevSizes, { gzip, brotli }) {
   const rows = [
     ["File", "Size", gzip && "Gzip", brotli && "Brotli"].filter(isString)
   ];
+  function formatChange(value, prevValue) {
+    const diff = value - (prevValue ?? 0);
+    if (diff === 0) {
+      return (0, import_tiny_file_size.humanizeBytes)(value);
+    }
+    const sign = diff < 0 ? "-" : "+";
+    const label = diff < 0 ? "\u2705" : "\u26A0\uFE0F";
+    return `${(0, import_tiny_file_size.humanizeBytes)(value)} (${sign}${(0, import_tiny_file_size.humanizeBytes)(Math.abs(diff))}) ${label}`;
+  }
+  __name(formatChange, "formatChange");
   for (const size of sizes) {
-    const row = [];
-    row.push(size.file, (0, import_tiny_file_size.humanizeBytes)(size.raw));
+    const row = [size.file];
+    const prev = prevSizes.find((p) => p.file === size.file);
+    row.push(formatChange(size.raw, prev?.raw ?? null));
     if (gzip) {
-      row.push(size.gzip !== null ? (0, import_tiny_file_size.humanizeBytes)(size.gzip) : "");
+      row.push(size.gzip !== null ? formatChange(size.gzip, prev?.gzip ?? null) : "");
     }
     if (brotli) {
-      row.push(size.brotli !== null ? (0, import_tiny_file_size.humanizeBytes)(size.brotli) : "");
+      row.push(size.brotli !== null ? formatChange(size.brotli, prev?.brotli ?? null) : "");
     }
     rows.push(row);
   }
-  return markdownTable(rows, { align: ["l", "r", "r", "r"] });
+  return markdownTable(rows);
 }
 __name(buildTable, "buildTable");
 async function main() {
@@ -11938,7 +11949,8 @@ async function main() {
   logger.info("Building current branch");
   await buildProject();
   logger.info("Collecting file sizes for current branch");
-  const sizes = await (0, import_tiny_file_size.getFileSizes)({ files: (0, import_tiny_file_size.getFilesFromGlobs)(globs), gzip, brotli });
+  const currentFiles = (0, import_tiny_file_size.getFilesFromGlobs)(globs);
+  const sizes = await (0, import_tiny_file_size.getFileSizes)({ files: currentFiles, gzip, brotli });
   logger.info(JSON.stringify(sizes, void 0, 4));
   try {
     logger.info(`Fetching branch ${pullRequest.base.ref}`);
@@ -11953,12 +11965,14 @@ async function main() {
   logger.info("Collecting file sizes for previous branch");
   const prevSizes = await (0, import_tiny_file_size.getFileSizes)({ files: (0, import_tiny_file_size.getFilesFromGlobs)(globs), gzip, brotli });
   logger.info(JSON.stringify(prevSizes, void 0, 4));
+  const currentFilesSet = new Set(currentFiles);
+  const missingSizes = prevSizes.filter((size) => !currentFilesSet.has(size.file));
   const body = [
     COMMENT_HEADER,
-    "Current sizes:",
-    buildTable(sizes, { gzip, brotli }),
-    "Previous sizes:",
-    buildTable(prevSizes, { gzip, brotli })
+    "### Changes:",
+    buildTable(sizes, prevSizes, { gzip, brotli }),
+    "### Missing files:",
+    buildTable(missingSizes, missingSizes, { gzip, brotli })
   ].join("\n\n");
   logger.info(
     `Fetching bot comment for PR ${pullRequest.number} at repo ${import_github.context.repo.owner}/${import_github.context.repo.repo}`
