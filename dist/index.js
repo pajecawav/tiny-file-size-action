@@ -11484,9 +11484,9 @@ var require_glob = __commonJS({
   }
 });
 
-// node_modules/.pnpm/tiny-file-size@0.3.2/node_modules/tiny-file-size/dist/index.js
+// node_modules/.pnpm/tiny-file-size@0.3.3/node_modules/tiny-file-size/dist/index.js
 var require_dist2 = __commonJS({
-  "node_modules/.pnpm/tiny-file-size@0.3.2/node_modules/tiny-file-size/dist/index.js"(exports, module2) {
+  "node_modules/.pnpm/tiny-file-size@0.3.3/node_modules/tiny-file-size/dist/index.js"(exports, module2) {
     "use strict";
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
@@ -11649,7 +11649,7 @@ var require_dist2 = __commonJS({
     function getFilesFromGlobs2(globs) {
       const filesSet = /* @__PURE__ */ new Set();
       for (const g of globs) {
-        for (const file of import_glob.default.sync(g)) {
+        for (const file of import_glob.default.sync(g, { nodir: true })) {
           filesSet.add(file);
         }
       }
