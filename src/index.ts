@@ -152,13 +152,12 @@ async function main() {
 	const currentFilesSet = new Set(currentFiles);
 	const missingSizes = prevSizes.filter(size => !currentFilesSet.has(size.file));
 
-	const body = [
-		COMMENT_HEADER,
-		"### Changes:",
-		buildTable(sizes, prevSizes, { gzip, brotli }),
-		"### Missing files:",
-		buildTable(missingSizes, missingSizes, { gzip, brotli }),
-	].join("\n\n");
+	const parts = [COMMENT_HEADER, "### Changes:", buildTable(sizes, prevSizes, { gzip, brotli })];
+	if (missingSizes.length > 0) {
+		parts.push("### Missing files:", buildTable(missingSizes, missingSizes, { gzip, brotli }));
+	}
+
+	const body = parts.join("\n\n");
 
 	logger.info(
 		`Fetching bot comment for PR ${pullRequest.number} at repo ${context.repo.owner}/${context.repo.repo}`
