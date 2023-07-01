@@ -12,23 +12,23 @@
 		"prepare": "husky install"
 	},
 	"devDependencies": {
-		"@commitlint/cli": "^17.6.5",
-		"@commitlint/config-conventional": "^17.6.5",
-		"@typescript-eslint/eslint-plugin": "^5.60.0",
-		"@typescript-eslint/parser": "^5.60.0",
+		"@commitlint/cli": "^17.6.6",
+		"@commitlint/config-conventional": "^17.6.6",
+		"@typescript-eslint/eslint-plugin": "^5.60.1",
+		"@typescript-eslint/parser": "^5.60.1",
 		"eslint": "^8.43.0",
 		"husky": "^8.0.3",
-		"lint-staged": "^13.2.2",
+		"lint-staged": "^13.2.3",
 		"npm-run-all": "^4.1.5",
 		"prettier": "^2.8.8",
-		"tsup": "^7.0.0",
-		"typescript": "^5.1.3"
+		"tsup": "^7.1.0",
+		"typescript": "^5.1.5"
 	},
 	"dependencies": {
 		"@actions/core": "^1.10.0",
 		"@actions/exec": "^1.1.1",
 		"@actions/github": "^5.1.1",
-		"esbuild": "^0.18.6",
+		"esbuild": "^0.18.10",
 		"has-pnpm": "^1.1.1",
 		"has-yarn": "^3.0.0",
 		"markdown-table": "^3.0.3",
